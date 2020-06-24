@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
@@ -100,8 +101,8 @@ func sampleId() {
 func sampleTOfN() {
 	fmt.Println("sample t of n")
 
-	n := 5
-	k := 3
+	n := 10
+	k := 7
 
 	// k secret keys erstellen
 	secs := make([]bls.SecretKey, k)
@@ -135,9 +136,22 @@ func sampleTOfN() {
 	}
 
 	// let's randomly choose k out of n signature to recover the master signature
-	// we take signatures 1, 3, 4
-	recoveringSigs := []bls.Sign{*sigs[1], *sigs[3], *sigs[4]}
-	recoveringIds := []bls.ID{ids[1], ids[3], ids[4]}
+	// initialize an array of indices
+	a := make([]int, n)
+	for i := range a {
+			a[i] = i
+	}
+	// shuffle
+	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
+	// using first k signatures
+	fmt.Printf("using signatures %v for recovery", a[:k])
+	recoveringSigs := make([]bls.Sign, k) //{*sigs[1], *sigs[3], *sigs[4]}
+	recoveringIds := make([]bls.ID, k) //{ids[1], ids[3], ids[4]}
+	// and use the first k signatures for recovery
+	for i := range recoveringSigs {
+		recoveringSigs[i] = *sigs[i]
+		recoveringIds[i] = ids[i]
+	}
 	var recoveredSig bls.Sign
 	recoveredSig.Recover(recoveringSigs, recoveringIds)
 	fmt.Printf("recovered sig: %v\n", recoveredSig)
